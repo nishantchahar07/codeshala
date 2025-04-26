@@ -23,10 +23,11 @@ const mailSender = async (email, title, body) => {
         })
         return info;
 
+
     }
     catch (err) {
         console.log("problem occur while sending mail ", err.message)
-
+        return null;
     }
 }
 
