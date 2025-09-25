@@ -42,6 +42,10 @@ const Users = new mongoose.Schema({
         ref: "CourseProgress",
         default: []
     },
+    contact: {
+        type: String,
+        default: ""
+    },
     image: {
         type: String,
         default: ""

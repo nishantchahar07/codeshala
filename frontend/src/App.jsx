@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Login from './pages/Login';
@@ -26,19 +26,19 @@ function Home() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="space-x-4"
         >
-          <Button
-            onClick={() => window.location.href = '/login'}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            Get Started
-          </Button>
-          <Button
-            onClick={() => window.location.href = '/signup'}
-            variant="outline"
-            className="border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-8 py-3 text-lg rounded-full transition-all duration-300"
-          >
-            Join Now
-          </Button>
+          <Link to="/login">
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+              Get Started
+            </Button>
+          </Link>
+          <Link to="/signup">
+            <Button
+              variant="outline"
+              className="border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-8 py-3 text-lg rounded-full transition-all duration-300"
+            >
+              Join Now
+            </Button>
+          </Link>
         </motion.div>
       </div>
     </div>

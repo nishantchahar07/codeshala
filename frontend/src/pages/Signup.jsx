@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import api from '../utils/api';
 
 const Signup = () => {
@@ -12,45 +14,58 @@ const Signup = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    contact: '',
     accountType: 'Student',
     otp: '',
   });
   const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSendOtp = async () => {
+    setOtpLoading(true);
+    setMessage('');
     try {
       const response = await api.post('/auth/sendotp', { email: formData.email });
       if (response.data.success) {
-        alert('OTP sent to your email');
+        setMessage('OTP sent to your email!');
         setOtpSent(true);
       } else {
-        alert(response.data.message);
+        setMessage(response.data.message || 'Failed to send OTP');
       }
     } catch (error) {
-      alert(error.response.data.message);
+      setMessage(error.response?.data?.message || 'An error occurred while sending OTP');
+    } finally {
+      setOtpLoading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage('');
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setMessage('Passwords do not match');
       return;
     }
+    setLoading(true);
     try {
       const response = await api.post('/auth/signup', formData);
       if (response.data.success) {
-        alert('Signup successful');
-        // Redirect to login
+        setMessage('Signup successful! Redirecting to login...');
+        setTimeout(() => navigate('/login'), 1000);
       } else {
-        alert(response.data.message);
+        setMessage(response.data.message || 'Signup failed');
       }
     } catch (error) {
-      alert(error.response.data.message);
+      setMessage(error.response?.data?.message || 'An error occurred during signup');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,6 +93,11 @@ const Signup = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {message && (
+              <div className={`p-3 rounded-md text-center ${message.includes('successful') || message.includes('sent') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {message}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <motion.div
@@ -129,6 +149,20 @@ const Signup = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45, duration: 0.5 }}
+              >
+                <Input
+                  type="tel"
+                  name="contact"
+                  placeholder="Contact Number"
+                  value={formData.contact}
+                  onChange={handleChange}
+                  className="h-10"
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
               >
                 <Input
@@ -161,16 +195,16 @@ const Signup = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.5 }}
               >
-                <select
-                  name="accountType"
-                  value={formData.accountType}
-                  onChange={handleChange}
-                  className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="Student">Student</option>
-                  <option value="Instructor">Instructor</option>
-                  <option value="Admin">Admin</option>
-                </select>
+                <Select value={formData.accountType} onValueChange={(value) => setFormData({ ...formData, accountType: value })}>
+                  <SelectTrigger className="w-full h-10">
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Student">Student</SelectItem>
+                    <SelectItem value="Instructor">Instructor</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </motion.div>
               {!otpSent ? (
                 <motion.div
@@ -181,9 +215,10 @@ const Signup = () => {
                   <Button
                     type="button"
                     onClick={handleSendOtp}
-                    className="w-full h-10 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+                    disabled={otpLoading}
+                    className="w-full h-10 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
                   >
-                    Send OTP
+                    {otpLoading ? 'Sending...' : 'Send OTP'}
                   </Button>
                 </motion.div>
               ) : (
@@ -210,9 +245,10 @@ const Signup = () => {
                   >
                     <Button
                       type="submit"
-                      className="w-full h-10 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                      disabled={loading}
+                      className="w-full h-10 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
                     >
-                      Create Account
+                      {loading ? 'Creating...' : 'Create Account'}
                     </Button>
                   </motion.div>
                 </>
@@ -226,9 +262,9 @@ const Signup = () => {
             >
               <p className="text-gray-600">
                 Already have an account?{' '}
-                <a href="/login" className="text-purple-600 hover:text-blue-600 font-semibold transition-colors">
+                <Link to="/login" className="text-purple-600 hover:text-blue-600 font-semibold transition-colors">
                   Sign in
-                </a>
+                </Link>
               </p>
             </motion.div>
           </CardContent>

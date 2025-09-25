@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,9 @@ const Login = () => {
     email: '',
     password: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -17,17 +21,21 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setMessage('');
     try {
       const response = await api.post('/auth/login', formData);
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
-        alert('Login successful');
-        // Redirect to dashboard or home
+        setMessage('Login successful! Redirecting...');
+        setTimeout(() => navigate('/dashboard'), 1000); // Redirect to dashboard
       } else {
-        alert(response.data.message);
+        setMessage(response.data.message || 'Login failed');
       }
     } catch (error) {
-      alert(error.response.data.message);
+      setMessage(error.response?.data?.message || 'An error occurred during login');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,6 +63,11 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {message && (
+              <div className={`p-3 rounded-md text-center ${message.includes('successful') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {message}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -93,9 +106,10 @@ const Login = () => {
               >
                 <Button
                   type="submit"
-                  className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  disabled={loading}
+                  className="w-full h-12 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
                 >
-                  Login
+                  {loading ? 'Logging in...' : 'Login'}
                 </Button>
               </motion.div>
             </form>
@@ -107,9 +121,9 @@ const Login = () => {
             >
               <p className="text-gray-600">
                 Don't have an account?{' '}
-                <a href="/signup" className="text-blue-600 hover:text-purple-600 font-semibold transition-colors">
+                <Link to="/signup" className="text-blue-600 hover:text-purple-600 font-semibold transition-colors">
                   Sign up
-                </a>
+                </Link>
               </p>
             </motion.div>
           </CardContent>
