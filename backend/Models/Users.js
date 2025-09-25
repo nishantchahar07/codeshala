@@ -1,50 +1,53 @@
 const mongoose = require('mongoose');
 
-const Users = new  mongoose.Schema({
- 
-    firstname : {
-        required : true,
-        type : String,
-        trim : true
+const Users = new mongoose.Schema({
+    firstname: {
+        required: true,
+        type: String,
+        trim: true
     },
-    lastname : {
-        required : true,
-        type : String,
-        trim : true
+    lastname: {
+        required: true,
+        type: String,
+        trim: true
     },
-    password : {
-        required : true,
-        type : String,
-        trim : true
+    password: {
+        required: true,
+        type: String,
+        trim: true
     },
-    email : {
-        required : true,
-        type : String,
-        trim : true
+    email: {
+        required: true,
+        type: String,
+        trim: true,
+        unique: true
     },
-    acountType : {
-        required : true,
-        type : String,
-        enum : ["Admin" , "Student" , "Instructor"]
+    accountType: {
+        required: true,
+        type: String,
+        enum: ["Admin", "Student", "Instructor"]
     },
-    additionalDetails : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "Profile",
-        required : true
+    additionalDetails: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Profile",
+        required: true
     },
-    Courses: {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "Courses",
-        required : true
+    courses: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Course",
+        default: []
     },
-    additionalDetails : {
-        type : String,
-        
-        required : true
+    courseProgress: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "CourseProgress",
+        default: []
     },
-    courseProgress : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "CourseProgress"
+    image: {
+        type: String,
+        default: ""
+    },
+    token: {
+        type: String
     }
 
 })

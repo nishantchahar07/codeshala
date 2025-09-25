@@ -7,21 +7,31 @@ const otpgenerator = require("otp-generator");
 const OTP = require("../Models/otp");
 const bcrypt = require("bcrypt");
 const mailSender = require("../utils/mailsender");
+const { validationResult } = require("express-validator");
 require("dotenv").config();
 
 // sendOtp
 exports.sendOtp = async (req, res) => {
-  try {
-    const { email } = req.body;
+   try {
+     const errors = validationResult(req);
+     if (!errors.isEmpty()) {
+       return res.status(400).json({
+         success: false,
+         message: "Validation errors",
+         errors: errors.array(),
+       });
+     }
 
-    // Check if user already exists
-    const existEmail = await User.findOne({ email });
-    if (existEmail) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists, please try again later",
-      });
-    }
+     const { email } = req.body;
+
+     // Check if user already exists
+     const existEmail = await User.findOne({ email });
+     if (existEmail) {
+       return res.status(400).json({
+         success: false,
+         message: "User already exists, please try again later",
+       });
+     }
 
     // Generate OTP
     let otp = otpgenerator.generate(6, { upperCaseAlphabets: false, lowerCaseAlphabets: true, specialChars: false });
@@ -34,6 +44,21 @@ exports.sendOtp = async (req, res) => {
     // Store OTP in DB
     const payload = { email, otp };
     const otpBody = await OTP.create(payload);
+
+    // Send OTP via email
+    try {
+      await mailSender(
+        email,
+        "OTP for Email Verification",
+        `Your OTP for email verification is: ${otp}. Please use this to complete your registration.`
+      );
+    } catch (error) {
+      console.error("Error sending OTP email:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error sending OTP email",
+      });
+    }
 
     // Return response successfully
     res.status(200).json({
@@ -51,16 +76,17 @@ exports.sendOtp = async (req, res) => {
 
 // SignUp
 exports.signUp = async (req, res) => {
-  try {
-    const { firstname, lastname, password, email, accountType, Contact, otp, confirmPassword } = req.body;
+   try {
+     const errors = validationResult(req);
+     if (!errors.isEmpty()) {
+       return res.status(400).json({
+         success: false,
+         message: "Validation errors",
+         errors: errors.array(),
+       });
+     }
 
-    // Validate
-    if (!firstname || !lastname || !password || !email || !confirmPassword || !otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Please fill all the required details",
-      });
-    }
+     const { firstname, lastname, password, email, accountType, contact, otp, confirmPassword } = req.body;
 
     // Password match check
     if (password !== confirmPassword) {
